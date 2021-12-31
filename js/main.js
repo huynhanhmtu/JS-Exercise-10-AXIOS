@@ -92,9 +92,12 @@ const changeStatus = (id) => {
   if (confirm("Change status?")) {
     loading();
     taskService.getTaskById(id)
-      // .catch() của hàm này đặt ở đâu?
       .then((result) => {
         return result.data.status = "todo" === result.data.status ? "completed" : "todo", taskService.updateTask(result.data);
+      })
+      .catch(error => {
+        alert(error);
+        unloading();
       })
       .then(() => {
         alert("Change status success!");
