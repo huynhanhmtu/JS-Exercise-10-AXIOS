@@ -1,9 +1,17 @@
 import TaskService from "./TaskService.js";
 const taskService = new TaskService();
+
 import Task from "./Task.js";
 
 const getEle = (id) => {
   return document.getElementById(id);
+}
+
+const loading = () => {
+  getEle("loader").style.display = "block";
+}
+const unloading = () => {
+  getEle("loader").style.display = "none";
 }
 
 // Render
@@ -23,15 +31,22 @@ const renderHTML = task => {
 };
 
 const renderTaskList = () => {
+  loading();
   taskService.getListTask()
     .then(result => {
-      let innerTodo = "", innerCompleted = "";
-      result.data.forEach(task => {
-        "todo" === task.status ? (innerTodo += renderHTML(task), getEle("todo").innerHTML = innerTodo) : (innerCompleted += renderHTML(task), getEle("completed").innerHTML = innerCompleted);
-      });
+      getEle("todo").innerHTML = "";
+      getEle("completed").innerHTML = "";
+      if (result.data.length > 0) {
+        let innerTodo = "", innerCompleted = "";
+        result.data.forEach(task => {
+          "todo" === task.status ? (innerTodo += renderHTML(task), getEle("todo").innerHTML = innerTodo) : (innerCompleted += renderHTML(task), getEle("completed").innerHTML = innerCompleted);
+        });
+      };
+      unloading();
     })
     .catch(error => {
       alert(error);
+      unloading();
     });
 };
 renderTaskList();
@@ -40,6 +55,7 @@ renderTaskList();
 getEle("addItem").onclick = () => {
   const newTask = getEle("newTask").value;
   if (newTask !== "") {
+    loading();
     const task = new Task("", newTask, "todo");
     taskService.addTask(task)
       .then(() => {
@@ -49,6 +65,7 @@ getEle("addItem").onclick = () => {
       })
       .catch((error) => {
         alert(error);
+        unloading();
       });
   } else alert("Enter content before adding");
 };
@@ -56,6 +73,7 @@ getEle("addItem").onclick = () => {
 // Delete task
 const deleteTask = id => {
   if (confirm("Delete task?")) {
+    loading();
     taskService.deleteTask(id)
       .then(() => {
         alert("Delete success!");
@@ -63,6 +81,7 @@ const deleteTask = id => {
       })
       .catch((error) => {
         alert(error);
+        unloading();
       });
   };
 };
@@ -71,13 +90,19 @@ window.deleteTask = deleteTask;
 //Change status
 const changeStatus = (id) => {
   if (confirm("Change status?")) {
+    loading();
     taskService.getTaskById(id)
+      // .catch() của hàm này đặt ở đâu?
       .then((result) => {
         return result.data.status = "todo" === result.data.status ? "completed" : "todo", taskService.updateTask(result.data);
       })
       .then(() => {
         alert("Change status success!");
         renderTaskList();
+      })
+      .catch(error => {
+        alert(error);
+        unloading();
       });
   };
 };
